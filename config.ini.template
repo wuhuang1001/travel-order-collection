@@ -1,0 +1,13 @@
+[login]
+phone = 
+token = 
+uid = 
+suid = 
+traceid = 
+
+[range]
+; 未启用
+start =  
+end =    
+; 可用
+month = 202510
