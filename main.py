@@ -63,7 +63,7 @@ if __name__ == "__main__":
     parser_history_detail = ParserOrderHistoryDetail()
     results = []
     print(f"查询到{choose_time}有",len(history_list_parsed),"条记录")
-    history_list_parsed = history_list_parsed[:2]
+    # history_list_parsed = history_list_parsed[:2]
     print("--------------------")
     for history_item in history_list_parsed:
         order_detail_res = get_history_detail.get_order_detail(
