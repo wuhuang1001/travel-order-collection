@@ -230,3 +230,23 @@ def safe_convert_timestamp(ts):
         pass
     return ts
 
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
+def month_diff(start_month, end_month):
+    """计算两个月份之间的间隔"""
+    start = datetime.strptime(start_month, "%Y%m")
+    end = datetime.strptime(end_month, "%Y%m")
+    
+    diff = (end.year - start.year) * 12 + (end.month - start.month)
+    return diff
+
+def month_generator(start_month, end_month, fmt="%Y%m"):
+    """生成从start_month到end_month的月份序列"""
+    current = datetime.strptime(start_month, fmt)
+    end = datetime.strptime(end_month, fmt)
+    
+    while current <= end:
+        yield current.strftime(fmt)
+        current += relativedelta(months=1)
+

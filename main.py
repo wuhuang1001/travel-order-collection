@@ -5,6 +5,48 @@ from omgid import get_omgid
 import configparser
 
 
+def get_result(token,phone,omgid,wsgsig,choose_time):
+    # 获取历史订单列表
+    get_history = GetHistoryList()
+    history_list_res = get_history.get_order_history_lists(
+        token=token,
+        phone=phone,
+        omgid=omgid,
+        wsgsig=wsgsig,
+        timemode=choose_time,
+    )
+   
+    parser_history = OrderManager()
+    history_list_parsed = parser_history.get_order_history_IDs(history_list_res.text)
+    # print(history_list_parsed)
+    # print("-----------------------------------------------------------------------------------------------------------")
+
+
+    # 获取历史订单详情
+    get_history_detail = GetHistoryDetail()
+    parser_history_detail = ParserOrderHistoryDetail()
+    result = []
+    print(f"查询到{choose_time}有",len(history_list_parsed),"条记录")
+    # history_list_parsed = history_list_parsed[:2]
+    print("--------------------")
+    for history_item in history_list_parsed:
+        order_detail_res = get_history_detail.get_order_detail(
+            token=token,
+            phone=phone,
+            omgid=omgid,
+            wsgsig=wsgsig, 
+            order_id=history_item["orderId"],
+            oid=history_item["orderId"], 
+            city_id=history_item["city_id"],
+            Cityid=history_item["city_id"],
+        )
+
+        order_detail_res_parsed = parser_history_detail.parse_order_detail(order_detail_res.text)
+        result.append(order_detail_res_parsed)
+    
+    return result
+    # print(results)
+
 # TODO 1.添加登录失败校验，如果登录失败/token过期就重新登录 2.添加错误处理
 if __name__ == "__main__":
 
@@ -28,7 +70,7 @@ if __name__ == "__main__":
         with open("config.ini", "w") as configfile:
             config.write(configfile)
 
-        print(login_res_parsed)
+        # print(login_res_parsed)
 
     token = config.get("login","token") or login_res_parsed["ticket"]
     phone = config.get("login","phone") or login_res_parsed["cell"]
@@ -41,45 +83,13 @@ if __name__ == "__main__":
     start_time = config.get("range","start")
     end_time = config.get("range","end")
     choose_time = config.get("range","month")
-
-    # 获取历史订单列表
-    get_history = GetHistoryList()
-    history_list_res = get_history.get_order_history_lists(
-        token=token,
-        phone=phone,
-        omgid=omgid,
-        wsgsig=wsgsig,
-        timemode=choose_time,
-    )
-   
-    parser_history = OrderManager()
-    history_list_parsed = parser_history.get_order_history_IDs(history_list_res.text)
-    # print(history_list_parsed)
-    # print("-----------------------------------------------------------------------------------------------------------")
-
-
-    # 获取历史订单详情
-    get_history_detail = GetHistoryDetail()
-    parser_history_detail = ParserOrderHistoryDetail()
+    
     results = []
-    print(f"查询到{choose_time}有",len(history_list_parsed),"条记录")
-    # history_list_parsed = history_list_parsed[:2]
-    print("--------------------")
-    for history_item in history_list_parsed:
-        order_detail_res = get_history_detail.get_order_detail(
-            token=token,
-            phone=phone,
-            omgid=omgid,
-            wsgsig=wsgsig, 
-            order_id=history_item["orderId"],
-            oid=history_item["orderId"], 
-            city_id=history_item["city_id"],
-            Cityid=history_item["city_id"],
-        )
-
-        order_detail_res_parsed = parser_history_detail.parse_order_detail(order_detail_res.text)
-        results.append(order_detail_res_parsed)
-
-    dict_in_list_to_csv(results,default_file_name=f'{choose_time}订单详情.csv')
-    # print(results)
-
+    if not choose_time:
+        for month in month_generator(start_time, end_time):
+            result = get_result(token,phone,omgid,wsgsig,month)
+            results.extend(result)
+        dict_in_list_to_csv(results,default_file_name=f'{start_time}-{end_time}订单详情.csv')
+    else:
+        result = get_result(token,phone,omgid,wsgsig,choose_time)
+        dict_in_list_to_csv(result,default_file_name=f'{choose_time}订单详情.csv')

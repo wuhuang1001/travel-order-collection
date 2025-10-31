@@ -8,7 +8,9 @@ suid =
 traceid = 
 
 [range]
-; 未启用
+; 优先使用指定月份，如果想导出月份范围
+; 可用，闭区间[start, end]
+; 格式为202510
 start =  
 end =    
 ; 可用
