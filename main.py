@@ -5,7 +5,7 @@ from omgid import get_omgid
 import configparser
 
 
-# TODO 1.添加参数生成控制，避免每次都重新生成参数/添加维持登录状态 2.添加错误处理
+# TODO 1.添加登录失败校验，如果登录失败/token过期就重新登录 2.添加错误处理
 if __name__ == "__main__":
 
     config = configparser.ConfigParser()
