@@ -164,6 +164,7 @@ class ParserOrderHistoryDetail:
             return {
                 'value': value,
                 'from_address': value['from_address'],
+                'from_name': value['from_name'],
                 'to_name': value['to_name'],
                 'city_name': value['city_name'],
                 'to_city_name': value['to_city_name'],
@@ -171,7 +172,6 @@ class ParserOrderHistoryDetail:
                 'begin_charge_time': value['begin_charge_time'], # 订单开始计费时间
                 'finish_time': value['finish_time'], # 订单完成时间
                 'car_type_name': value['car_type_name'],
-                'from_name': value['from_name'],
 
             }
         
