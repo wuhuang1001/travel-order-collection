@@ -200,6 +200,7 @@ def dict_in_list_to_csv(
         if col in df.columns:
             df[col] = df[col].apply(safe_convert_timestamp)
 
+    print("开始保存操作")
     # 创建 Tkinter 根窗口并隐藏
     root = Tk()
     root.withdraw()
