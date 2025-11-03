@@ -1,5 +1,5 @@
 import requests
-from tools import send_get_request
+from utils.tools import send_get_request
 import time
 
 class GetHistoryList:

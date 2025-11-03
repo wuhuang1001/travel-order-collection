@@ -1,7 +1,7 @@
 from datetime import datetime
 import requests
 from typing import Dict, Any, Optional, List
-from wsgsig import generate_wsgsig
+from utils.wsgsig import generate_wsgsig
 import pandas
 from tkinter import Tk, filedialog
 import os

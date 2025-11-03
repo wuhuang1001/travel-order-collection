@@ -2,7 +2,7 @@ import requests
 from urllib.parse import urlencode, quote
 from typing import Dict, Any, Optional, List
 import json
-from tools import *
+from utils.tools import *
 import response_decorators
 
 class LoginRequest:

@@ -1,7 +1,7 @@
-import login
-from parser_order import *
-from tools import *
-from omgid import get_omgid
+import network.login as login
+from service.parser_order import *
+from utils.tools import *
+from utils.omgid import get_omgid
 import configparser
 
 
