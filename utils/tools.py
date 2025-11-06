@@ -244,7 +244,7 @@ def month_diff(start_month, end_month):
     return diff
 
 def month_generator(start_month, end_month, fmt="%Y%m"):
-    """生成从start_month到end_month的月份序列"""
+    """生成从start_month到end_month的月份序列，闭区间"""
     current = datetime.strptime(start_month, fmt)
     end = datetime.strptime(end_month, fmt)
     
