@@ -47,14 +47,43 @@ def get_result(token,phone,omgid,wsgsig,choose_time):
     return result
     # print(results)
 
+def create_default_config():
+    """创建默认的配置文件"""
+    config = configparser.ConfigParser()
+    
+    # 添加登录部分
+    config["login"] = {
+        "phone": "",
+        "token": "",
+        "uid": "",
+        "suid": "",
+        "traceid": ""
+    }
+    
+    # 添加范围部分
+    config["range"] = {
+        "start": "",
+        "end": "",
+        "month": ""
+    }
+    
+    # 写入配置文件
+    with open("config.ini", "w", encoding="utf-8") as configfile:
+        config.write(configfile)
+
+
 # TODO 1.添加登录失败校验，如果登录失败/token过期就重新登录 2.添加错误处理
 if __name__ == "__main__":
+    if not os.path.exists("config.ini"):
+        create_default_config()
 
     config = configparser.ConfigParser()
     config.read("config.ini",encoding="utf-8")
     
     is_login = not config.get("login","token") or not config.get("login","phone") or not config.get("login","uid") or not config.get("login","traceid")
     if is_login:
+        print("未检测到登录状态，请先登录...")
+        print("--------------------")
         login_res = login.login()
         if not login_res:
             print("登录失败")
@@ -71,6 +100,9 @@ if __name__ == "__main__":
             config.write(configfile)
 
         # print(login_res_parsed)
+    else:
+        print("已检测到登录状态，如需退出登录，请删除config.ini文件后重新运行程序")
+        print("--------------------")
 
     token = config.get("login","token") or login_res_parsed["ticket"]
     phone = config.get("login","phone") or login_res_parsed["cell"]
@@ -80,11 +112,44 @@ if __name__ == "__main__":
     omgid = get_omgid()
     wsgsig = get_wsgsig()
 
-    start_time = config.get("range","start")
-    end_time = config.get("range","end")
-    choose_time = config.get("range","month")
+    is_range = config.get("range","start") and config.get("range","end")
+    is_time = config.get("range","month")
+
+    if is_time or is_range:
+        if is_time:
+            print(f"当前使用的时间范围为: {config.get('range', 'month')}")
+        else:
+            print(f"当前使用的时间范围为: {config.get('range', 'start')} - {config.get('range', 'end')}")
+        use_config = input("是否使用？(y/n): ").strip().lower()
+    if use_config != 'y':
+        is_range = False
+        is_time = False
+
+    if not is_range and not is_time:
+        while True:
+            time_input = input("请输入时间范围(格式: 202510-202511)或时间(格式: 202511): ").strip()
+            if '-' in time_input:
+                parts = time_input.split('-')
+                if len(parts) == 2 and len(parts[0]) == 6 and len(parts[1]) == 6 and parts[0].isdigit() and parts[1].isdigit():
+                    start_time = parts[0]
+                    end_time = parts[1]
+                    choose_time = None
+                    is_range = True
+                    break
+            elif len(time_input) == 6 and time_input.isdigit():
+                start_time = None
+                end_time = None
+                choose_time = time_input
+                is_time = True
+                break
+            print("格式错误，请重新输入")
     
+    start_time = config.get("range", "start") if is_range else None
+    end_time = config.get("range", "end") if is_range else None
+    choose_time = config.get("range", "month") if is_time else None
+
     results = []
+    # 优先使用单月份
     if not choose_time:
         for month in month_generator(start_time, end_time):
             result = get_result(token,phone,omgid,wsgsig,month)
