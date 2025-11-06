@@ -4,6 +4,8 @@
 
 # 运行
 
+运行环境：python3.8
+
 1. 安装requirements.txt中的依赖
 
 2. 删除文件夹中config.ini.template 文件的 .template后缀
