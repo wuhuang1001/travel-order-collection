@@ -5,7 +5,7 @@ from utils.omgid import get_omgid
 import configparser
 
 
-def get_result(token,phone,omgid,wsgsig,choose_time):
+def get_result(token,phone,omgid,wsgsig,choose_time,pagenum=0):
     # 获取历史订单列表
     get_history = GetHistoryList()
     history_list_res = get_history.get_order_history_lists(
@@ -14,6 +14,7 @@ def get_result(token,phone,omgid,wsgsig,choose_time):
         omgid=omgid,
         wsgsig=wsgsig,
         timemode=choose_time,
+        pagenum=pagenum
     )
    
     parser_history = OrderManager()
@@ -72,8 +73,8 @@ def create_default_config():
         config.write(configfile)
 
 
-# TODO 1.添加登录失败校验，如果登录失败/token过期就重新登录 2.添加错误处理
-if __name__ == "__main__":
+# TODO 1.添加登录失败校验，如果登录失败/token过期就重新登录 2.添加错误处理 3.添加多页处理
+def main(*args, **kwargs):
     if not os.path.exists("config.ini"):
         create_default_config()
 
@@ -156,6 +157,9 @@ if __name__ == "__main__":
     choose_time = config.get("range", "month") if is_time else None
 
     results = []
+    pagenum = 0
+    if "pagenum" in kwargs:
+        pagenum = kwargs["pagenum"]
     # 优先使用单月份
     if not choose_time:
         for month in month_generator(start_time, end_time):
@@ -163,5 +167,8 @@ if __name__ == "__main__":
             results.extend(result)
         dict_in_list_to_csv(results,default_file_name=f'{start_time}-{end_time}订单详情.csv')
     else:
-        result = get_result(token,phone,omgid,wsgsig,choose_time)
+        result = get_result(token,phone,omgid,wsgsig,choose_time,pagenum=pagenum)
         dict_in_list_to_csv(result,default_file_name=f'{choose_time}订单详情.csv')
+
+if __name__ == "__main__":
+    main()
