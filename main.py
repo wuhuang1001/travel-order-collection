@@ -135,12 +135,19 @@ if __name__ == "__main__":
                     end_time = parts[1]
                     choose_time = None
                     is_range = True
+                    config["range"]["start"] = start_time
+                    config["range"]["end"] = end_time
+                    with open("config.ini", "w") as configfile:
+                        config.write(configfile)
                     break
             elif len(time_input) == 6 and time_input.isdigit():
                 start_time = None
                 end_time = None
                 choose_time = time_input
                 is_time = True
+                config["range"]["month"] = choose_time
+                with open("config.ini", "w") as configfile:
+                    config.write(configfile)
                 break
             print("格式错误，请重新输入")
     
