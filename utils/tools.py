@@ -216,7 +216,7 @@ def dict_in_list_to_csv(
 
     # 如果用户没有取消对话框，则保存文件
     if file_path:
-        df.to_csv(file_path, index=False, encoding='utf-8')
+        df.to_csv(file_path, index=False, encoding='ANSI')
         print(f"文件已保存到: {file_path}")
     else:
         print("用户取消了保存操作")
