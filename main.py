@@ -121,7 +121,7 @@ def main(*args, **kwargs):
             print(f"当前使用的时间范围为: {config.get('range', 'month')}")
         else:
             print(f"当前使用的时间范围为: {config.get('range', 'start')} - {config.get('range', 'end')}")
-        use_config = input("是否使用？(y/n): ").strip().lower()
+        use_config = input("是否使用？(y/n): ").strip().lower() or 'y'
         if use_config != 'y':
             is_range = False
             is_time = False
