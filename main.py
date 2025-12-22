@@ -171,4 +171,6 @@ def main(*args, **kwargs):
         dict_in_list_to_csv(result,default_file_name=f'{choose_time}订单详情.csv')
 
 if __name__ == "__main__":
+    import utils.check_deps as check_deps
+    if not check_deps.check_requirements(): exit(1)
     main()
