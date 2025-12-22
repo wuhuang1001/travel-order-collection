@@ -1,6 +1,6 @@
 from typing import Dict, Any, Optional, Callable
 from utils.tools import send_get_request
-from response_decorators import handle_api_response
+# from response_decorators import handle_api_response
 import time
 from service.parse_response import ResponseParser
 from network.history import *
