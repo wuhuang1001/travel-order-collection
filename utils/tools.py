@@ -203,7 +203,30 @@ def dict_in_list_to_csv(
     print("开始保存操作")
     # 创建 Tkinter 根窗口并隐藏
     root = Tk()
-    root.withdraw()
+    # root.withdraw()
+
+    # 创建一个临时的顶层窗口，确保在任务栏显示并获得焦点
+    root.title("保存文件")  # 设置窗口标题
+    root.geometry("1x1+10000+10000")  # 将窗口移到屏幕外，避免闪烁
+    root.attributes('-topmost', True)  # 置顶显示
+    root.deiconify()  # 显示窗口
+    root.lift()  # 提升窗口层级
+    root.focus_force()  # 强制获得焦点
+
+    # 初始化文件路径变量
+    file_path = None
+
+    # 定义窗口关闭事件处理函数
+    def on_closing():
+        nonlocal file_path
+        file_path = None  # 设置文件路径为None表示用户取消操作
+        root.quit()  # 退出主循环
+
+    # 绑定窗口关闭事件
+    root.protocol("WM_DELETE_WINDOW", on_closing)
+
+    # 更新窗口以确保属性生效
+    root.update()
 
     # 打开"保存文件"对话框，指定默认文件名和文件类型
     file_path = filedialog.asksaveasfilename(
@@ -213,6 +236,9 @@ def dict_in_list_to_csv(
         initialdir=default_dir,
         initialfile=default_file_name
     )
+
+    # 销毁临时窗口
+    root.destroy()
 
     # 如果用户没有取消对话框，则保存文件
     if file_path:
