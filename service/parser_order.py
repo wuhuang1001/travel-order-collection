@@ -163,7 +163,7 @@ class ParserOrderHistoryDetail:
         def _handler_order_info(value):
             return {
                 'value': value,
-                'from_name': value['from_name'] if value['from_address'] else value['from_address'],
+                'from_name': value['from_name'] if value['from_name'] else value['from_address'],
                 # 'from_address': value['from_address'],
                 # 'from_name': value['from_name'],
                 'to_name': value['to_name'],
