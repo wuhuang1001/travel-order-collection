@@ -75,7 +75,10 @@ def create_default_config():
         config.write(configfile)
 
 
-# TODO 1.添加登录失败校验，如果登录失败/token过期就重新登录 2.添加错误处理 3.添加多页处理
+# TODO 添加登录失败校验，如果登录失败/token过期就重新登录
+# TODO 添加错误处理 
+# TODO 添加多页处理 
+# TODO 添加自动更新脚本
 def main(*args, **kwargs):
     if not os.path.exists("config.ini"):
         create_default_config()
