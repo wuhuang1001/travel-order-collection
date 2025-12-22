@@ -3,6 +3,7 @@ from service.parser_order import *
 from utils.tools import *
 from utils.omgid import get_omgid
 import configparser
+from rich.progress import track
 
 
 def get_result(token,phone,omgid,wsgsig,choose_time,pagenum=0):
@@ -30,7 +31,8 @@ def get_result(token,phone,omgid,wsgsig,choose_time,pagenum=0):
     print(f"查询到{choose_time}有",len(history_list_parsed),"条记录")
     # history_list_parsed = history_list_parsed[:2]
     print("--------------------")
-    for history_item in history_list_parsed:
+    print("正在偷窥你的订单记录：")
+    for history_item in track(history_list_parsed,description="(　д ) ﾟ ﾟ  Soooooooo much..."):
         order_detail_res = get_history_detail.get_order_detail(
             token=token,
             phone=phone,
