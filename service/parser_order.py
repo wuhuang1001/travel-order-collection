@@ -122,6 +122,9 @@ class ParserOrderHistoryDetail:
         order_data_basic_data_detail = parser_data_basic_data.parse_response(order_data_basic_data)
         
         result = {}
+        # 提取所有元数据字段（包含"meta"关键字且值为字典类型的字段）
+        # 将这些元数据字段的内容合并到结果字典中返回
+        # 这是因为ResponseParser在separate_metadata=True时会将元数据存为*_meta字段
         for key,value in order_data_basic_data_detail.items():
             if "meta" in key and isinstance(value, dict):
                 result.update(value)
