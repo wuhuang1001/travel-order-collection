@@ -7,6 +7,28 @@ from rich.progress import track
 
 
 def get_result(token,phone,omgid,wsgsig,choose_time,pagenum=0):
+    """
+    获取订单历史记录的主函数
+    
+    该函数通过调用历史订单接口获取订单列表，然后逐个获取每个订单的详细信息，
+    并将订单数据解析后返回
+    
+    Args:
+        token (str): 用户认证令牌，用于身份验证
+        phone (str): 用户手机号，用于身份验证
+        omgid (str): 用户唯一标识符
+        wsgsig (str): 请求签名参数，用于安全验证
+        choose_time (str): 选择的时间范围，用于筛选特定时间段的订单
+        pagenum (int, optional): 页码，默认为0，用于分页获取数据
+    
+    Returns:
+        list: 包含订单详细信息的列表，每个元素是一个订单的详细信息字典
+    
+    Example:
+    ↓TODO 待优化
+        >>> result = get_result("token123", "13800138000", "omgid123", "wsgsig123", "2023-01", 0)
+        >>> print(len(result))  # 打印获取到的订单数量
+    """
     # 获取历史订单列表
     get_history = GetHistoryList()
     history_list_res = get_history.get_order_history_lists(
@@ -107,6 +129,7 @@ def main(*args, **kwargs):
 
         # print(login_res_parsed)
     else:
+        # TODO 表明登录用户
         print("已检测到登录状态，如需退出登录，请删除config.ini文件后重新运行程序")
         print("--------------------")
 
@@ -116,6 +139,7 @@ def main(*args, **kwargs):
     suid = config.get("login","suid") or login_res_parsed["suid"]
     traceid = config.get("login","traceid") or login_res_parsed["traceid"]
     omgid = get_omgid()
+    # TODO 需要具备nodejs环境，待优化
     wsgsig = get_wsgsig()
 
     is_range = config.get("range","start") and config.get("range","end")

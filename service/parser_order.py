@@ -8,19 +8,50 @@ import json
 
 
 class ParserOrderHistoryList:
+    """
+    订单历史列表解析器类
+    用于解析订单历史列表的响应数据，提取订单相关信息
+    """
     
-    # TODO 继续完成 1.增加get必要参数的函数 2.合并所有必要参数到新函数get_req_params 3.完善注释 
+    # TODO 继续完成 1.增加get必要参数的函数 2.合并所有必要参数到新函数get_req_params 3.完善注释 4.清除空值
     def parse_order_history_order_done(self, response_text: str) -> Dict[str, Any]:
+        """
+        解析订单历史中的已完成订单信息
+        
+        Args:
+            response_text: 响应文本数据
+            
+        Returns:
+            Dict: 解析后的订单完成信息字典
+        """
         parse = ResponseParser()
         order_history_order_done = parse.parse_response(response_text)['order_done']
         
         return order_history_order_done
     
     def get_order_history_order_done_orderId(self, response_text: str) -> str:
+        """
+        从订单历史响应中提取订单ID
+        
+        Args:
+            response_text: 包含订单信息的响应文本
+            
+        Returns:
+            str: 订单ID
+        """
         parse = self._create_history_order_done_item_handlers()
         return parse.parse_response(response_text)['orderId']
     
     def get_order_history_order_done_area(self, response_text: str) -> str:
+        """
+        从订单历史响应中提取区域信息
+        
+        Args:
+            response_text: 包含订单信息的响应文本
+            
+        Returns:
+            str: 区域信息
+        """
         parse = self._create_history_order_done_item_handlers()
         return parse.parse_response(response_text)['extra_data']['area']
 
@@ -102,6 +133,10 @@ class ParserOrderHistoryList:
 
 
 class ParserOrderHistoryDetail:
+    """
+    订单历史详情解析器类
+    用于解析订单历史详情的响应数据，提取详细的订单信息
+    """
 
     def parse_order_detail(self, response_text: str) -> Dict[str, Any]:
         """
@@ -111,7 +146,7 @@ class ParserOrderHistoryDetail:
             response_text: 响应文本
         
         Returns:
-            Dict[str, Any]: 解析后的订单详细信息
+            Dict: 解析后的订单详细信息
         """
         parse = ResponseParser()
         parser_data = self._create_order_data_handlers()
@@ -193,14 +228,27 @@ class ParserOrderHistoryDetail:
 
 # TODO：1.更新所需要的参数列表 2.完善注释
 class OrderManager:
-    '''
-    整合连接订单与订单详细信息
-    '''
+    """
+    订单管理器类
+    整合连接订单与订单详细信息，提供订单ID和城市ID的提取功能
+    """
     def __init__(self):
+        """
+        初始化订单管理器，创建历史列表和详情请求实例
+        """
         self.history_list_res = GetHistoryList()
         self.history_detail_res = GetHistoryDetail()
 
     def get_order_history_IDs(self, response_text: str):
+        """
+        从响应文本中提取订单ID和城市ID
+        
+        Args:
+            response_text: 包含订单历史的响应文本
+            
+        Returns:
+            list: 包含订单ID和城市ID的字典列表
+        """
         parse = ParserOrderHistoryList()
         order_done = parse.parse_order_history_order_done(response_text)
         result = []
@@ -216,6 +264,19 @@ class OrderManager:
         return result
 
 class ParserLoginRes:
+    """
+    登录响应解析器类
+    用于解析登录请求的响应数据
+    """
     def get_login_res(self, response_text: str) -> Dict[str, Any]:
+        """
+        解析登录响应数据
+        
+        Args:
+            response_text: 登录响应文本
+            
+        Returns:
+            Dict: 解析后的登录响应数据
+        """
         parse = ResponseParser()
         return parse.parse_response(response_text)
