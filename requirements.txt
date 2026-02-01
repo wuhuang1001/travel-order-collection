@@ -10,3 +10,4 @@ six<=1.17.0
 tzdata<=2025.2
 urllib3==2.2.3
 rich>=13.0.0
+packaging>=26.0

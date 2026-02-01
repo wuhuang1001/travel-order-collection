@@ -1,0 +1,29 @@
+[project]
+name = "travel-order-collection"
+version = "0.1.0"
+description = "滴滴订单导出"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "certifi<=2025.10.5",
+    "charset-normalizer<=3.4.4",
+    "idna<=3.11",
+    "numpy==1.24.4",
+    "packaging>=26.0",
+    "pandas==2.0.3",
+    "python-dateutil==2.9.0.post0",
+    "pytz<=2025.2",
+    "requests==2.32.4",
+    "rich>=14.3.1",
+    "six<=1.17.0",
+    "tzdata<=2025.2",
+    "urllib3==2.2.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]
+
+[tool.uv]
+package = false
