@@ -220,11 +220,13 @@ def main(*args, **kwargs):
             results.extend(result)
             total_count += month_count
         success(f"共获取 {len(results)} 条订单")
-        dict_in_list_to_csv(results,default_file_name=f'{start_time}-{end_time}订单详情.csv')
-    else:
-        result, total_count = get_result(token,phone,omgid,wsgsig,choose_time,pagenum=pagenum)
+        default_file_name=f'{start_time}-{end_time}订单详情.csv'
+    else: # 单月份
+        results, total_count = get_result(token,phone,omgid,wsgsig,choose_time,pagenum=pagenum)
         success(f"共获取 {total_count} 条订单")
-        dict_in_list_to_csv(result,default_file_name=f'{choose_time}订单详情.csv')
+        default_file_name=f'{choose_time}订单详情.csv'
+
+    dict_in_list_to_csv(results, default_file_name=default_file_name)
 
 if __name__ == "__main__":
     import utils.check_deps as check_deps 

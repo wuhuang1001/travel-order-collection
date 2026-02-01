@@ -162,6 +162,8 @@ def dict_in_list_to_csv(
     
     Args:
         data: 字典列表数据
+        default_dir: 默认保存路径
+        default_file_name：默认文件名称
         
     '''
 
@@ -177,7 +179,7 @@ def dict_in_list_to_csv(
         "to_name": "目的地",
         "city_name": "所在城市",
         "to_city_name": "目的城市",
-        "create_time": "订单创建时间",
+        "create_time": "订单创建时间戳",
         "begin_charge_time": "开始计费时间",
         "finish_time": "行程结束时间",
         "car_type_name": "车型名称"
@@ -188,17 +190,21 @@ def dict_in_list_to_csv(
     # 检查是否有缺失的列
     missing_columns = set(column_mapping.keys()) - set(df.columns)
     if missing_columns:
-        print(f"警告: 数据中缺少以下列: {missing_columns}")
+        pass
+        # print(f"警告: 数据中缺少以下列: {missing_columns}")
 
+    # 把秒级时间戳处理成excel可以识别的时间戳（日期序列号）
+    # Excel 日期序列号 = (Unix时间戳 / 86400) + 25569
+    time_columns = ["create_time", "begin_charge_time", "finish_time"]
+    for col in time_columns:
+        if col in df.columns:
+            df[col] = df[col] / 86400 + 25569
+    
     df.rename(
         columns=column_mapping,
         inplace=True
     )
 
-    time_columns = ["订单创建时间", "开始计费时间", "行程结束时间"]
-    for col in time_columns:
-        if col in df.columns:
-            df[col] = df[col].apply(safe_convert_timestamp)
 
     print("开始保存操作")
     # 创建 Tkinter 根窗口并隐藏

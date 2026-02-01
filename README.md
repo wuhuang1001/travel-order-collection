@@ -14,16 +14,29 @@
 python main.py
 ```
 
-## 注意事项
+## 输出字段
 
-需要注意，目前还未对多页数据进行处理，一次最多爬取50条数据，如果超出五十条数据，请运行`another_page.py`保存另外的数据
+~~total_fee": "总费用",~~
 
+"actual_pay_fee": "实付费用",
 
-```
-python another_page.py
-```
+"license_num": "车牌号码",
 
-*此为临时解决方案，如果数据量过大，请修改`another_page.py`中的`pagenum`参数，每页50条*
+"from_name": "出发地",
+
+"to_name": "目的地",
+
+"city_name": "所在城市",
+
+~~"to_city_name": "目的城市",~~
+
+"create_time": "订单创建时间",
+
+~~"begin_charge_time": "开始计费时间",~~
+
+~~"finish_time": "行程结束时间",~~
+
+~~"car_type_name": "车型名称"~~
 
 
 **本项目仅供学习交流使用，请勿用于商业用途。**

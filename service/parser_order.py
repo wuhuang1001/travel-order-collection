@@ -140,7 +140,7 @@ class ParserOrderHistoryDetail:
 
     def parse_order_detail(self, response_text: str) -> Dict[str, Any]:
         """
-        解析获取订单详细信息
+        解析获取单个订单详细信息
         
         Args:
             response_text: 响应文本
@@ -163,6 +163,22 @@ class ParserOrderHistoryDetail:
         for key,value in order_data_basic_data_detail.items():
             if "meta" in key and isinstance(value, dict):
                 result.update(value)
+        # 暂时的解决方案
+        """
+        保留的字段：
+        "actual_pay_fee": "实付费用", 
+        "license_num": "车牌号码",
+        "from_name": "出发地",
+        "to_name": "目的地",
+        "city_name": "所在城市",
+        "create_time": "订单创建时间",
+        """
+
+        result.pop("total_fee", None)
+        result.pop("to_city_name", None)
+        result.pop("begin_charge_time", None)
+        result.pop("finish_time", None)
+        result.pop("car_type_name", None)
         return result
 
     def _create_order_data_handlers(self) -> ResponseParser:
