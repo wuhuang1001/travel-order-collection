@@ -163,8 +163,7 @@ def main(*args, **kwargs):
     suid = config.get("login","suid") or login_res_parsed["suid"]
     traceid = config.get("login","traceid") or login_res_parsed["traceid"]
     omgid = get_omgid()
-    # TODO 需要具备nodejs环境，待优化
-    wsgsig = get_wsgsig()
+    wsgsig  = get_wsgsig()
 
     is_range = config.get("range","start") and config.get("range","end")
     is_time = config.get("range","month")
