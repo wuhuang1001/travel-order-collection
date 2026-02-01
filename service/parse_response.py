@@ -1,7 +1,6 @@
 import json
 from typing import Any, Dict, List, Optional, Callable
 
-# TODO 混合模式：结合枚举和自定义函数的优点。为storage_level提供默认的枚举值，同时允许用户传入自定义函数。在解析器中，优先使用自定义函数，若未提供，则根据枚举值执行对应的存储逻辑。这种方案既保持了易用性，又提供了灵活的扩展空间
 class ResponseParser:
     '''
     通用响应包解析器

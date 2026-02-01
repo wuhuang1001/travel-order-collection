@@ -179,7 +179,6 @@ class ParserOrderHistoryDetail:
 
         return parser
 
-# TODO 有时候使用from_name字段返回，有时候使用from_address字段返回
     def _create_order_data_basic_data_handlers(self) -> ResponseParser:
         '''
         传入data.basic_data，处理data.basic_data层数据
