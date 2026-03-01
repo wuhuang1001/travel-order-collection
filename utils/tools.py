@@ -195,10 +195,12 @@ def dict_in_list_to_csv(
 
     # 把秒级时间戳处理成excel可以识别的时间戳（日期序列号）
     # Excel 日期序列号 = (Unix时间戳 / 86400) + 25569
+    # +8 时区 东八区
     time_columns = ["create_time", "begin_charge_time", "finish_time"]
     for col in time_columns:
         if col in df.columns:
             df[col] = df[col] / 86400 + 25569
+            df[col] = df[col] + 8 / 24  # 调整时区到东八区 
     
     df.rename(
         columns=column_mapping,
