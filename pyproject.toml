@@ -1,7 +1,7 @@
 [project]
 name = "travel-order-collection"
 version = "1.0.0"
-description = "滴滴订单导出"
+description = "项目简介"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [

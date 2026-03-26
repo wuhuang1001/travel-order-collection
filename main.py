@@ -243,7 +243,7 @@ if __name__ == "__main__":
     if not check_deps.check_requirements(): sys.exit(1) # 检查依赖
 
     # 解析命令行参数
-    parser = argparse.ArgumentParser(description="滴滴订单导出工具")
+    parser = argparse.ArgumentParser(description="订单导出工具")
     parser.add_argument("--check-update", action="store_true", help="检查版本更新")
     args = parser.parse_args()
 
