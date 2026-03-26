@@ -18,7 +18,7 @@ jobs:
         id: version
         run: |
           # 从 pyproject.toml 读取版本号
-          VERSION=$(grep -oP 'version\s*=\s*["\']\K[^"\']+' pyproject.toml)
+          VERSION=$(grep -oP 'version\s*=\s*["\047]\K[^"\047]+' pyproject.toml)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
           # 从 tag 获取版本号（去掉 v 前缀）
@@ -31,7 +31,7 @@ jobs:
 
       - name: Create version.json
         run: |
-          cat > version.json << EOF
+          cat > version.json << 'EOF'
           {
             "version": "${{ steps.version.outputs.version }}",
             "changelog": "Release ${{ steps.version.outputs.version }}",
@@ -69,28 +69,35 @@ jobs:
             -H "Content-Type: application/json" \
             | jq -r '.sha // empty')
 
+          # 对内容进行 base64 编码
+          ENCODED_CONTENT=$(printf '%s' "$VERSION_CONTENT" | base64 -w 0)
+
           # 构建 API 请求
           if [ -n "$FILE_SHA" ]; then
             # 更新现有文件
             curl -X PUT \
               "https://gitee.com/api/v5/repos/${GITEE_USER}/${GITEE_REPO}/contents/travel-order-collection.json" \
               -H "Content-Type: application/json" \
-              -d "{
-                \"access_token\": \"${GITEE_TOKEN}\",
-                \"sha\": \"${FILE_SHA}\",
-                \"content\": \"$(echo -n "$VERSION_CONTENT" | base64 -w 0)\",
-                \"message\": \"Update travel-order-collection to v${{ steps.version.outputs.version }}\"
-              }"
+              -d @- << 'EOF'
+          {
+            "access_token": "$GITEE_TOKEN",
+            "sha": "$FILE_SHA",
+            "content": "$ENCODED_CONTENT",
+            "message": "Update travel-order-collection to v${{ steps.version.outputs.version }}"
+          }
+          EOF
           else
             # 创建新文件
             curl -X POST \
               "https://gitee.com/api/v5/repos/${GITEE_USER}/${GITEE_REPO}/contents/travel-order-collection.json" \
               -H "Content-Type: application/json" \
-              -d "{
-                \"access_token\": \"${GITEE_TOKEN}\",
-                \"content\": \"$(echo -n "$VERSION_CONTENT" | base64 -w 0)\",
-                \"message\": \"Create travel-order-collection v${{ steps.version.outputs.version }}\"
-              }"
+              -d @- << 'EOF'
+          {
+            "access_token": "$GITEE_TOKEN",
+            "content": "$ENCODED_CONTENT",
+            "message": "Create travel-order-collection v${{ steps.version.outputs.version }}"
+          }
+          EOF
           fi
 
           echo "Synced to Gitee: ${GITEE_USER}/${GITEE_REPO}/travel-order-collection.json"
