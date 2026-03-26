@@ -1,0 +1,96 @@
+name: Sync Version
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version info
+        id: version
+        run: |
+          # 从 pyproject.toml 读取版本号
+          VERSION=$(grep -oP 'version\s*=\s*["\']\K[^"\']+' pyproject.toml)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # 从 tag 获取版本号（去掉 v 前缀）
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          echo "tag_version=$TAG_VERSION" >> $GITHUB_OUTPUT
+
+          # 获取当前日期
+          RELEASE_DATE=$(date +%Y-%m-%d)
+          echo "release_date=$RELEASE_DATE" >> $GITHUB_OUTPUT
+
+      - name: Create version.json
+        run: |
+          cat > version.json << EOF
+          {
+            "version": "${{ steps.version.outputs.version }}",
+            "changelog": "Release ${{ steps.version.outputs.version }}",
+            "download_url": "https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}",
+            "release_date": "${{ steps.version.outputs.release_date }}"
+          }
+          EOF
+
+      - name: Commit version.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add version.json
+          git commit -m "Update version.json to v${{ steps.version.outputs.version }}" || echo "No changes to commit"
+          git push origin HEAD:main
+
+      - name: Sync to Gitee
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          GITEE_USER: ${{ secrets.GITEE_USER }}
+          GITEE_REPO: ${{ secrets.GITEE_REPO }}
+        run: |
+          if [ -z "$GITEE_TOKEN" ] || [ -z "$GITEE_USER" ] || [ -z "$GITEE_REPO" ]; then
+            echo "Gitee secrets not configured, skipping sync"
+            exit 0
+          fi
+
+          # 读取 version.json 内容
+          VERSION_CONTENT=$(cat version.json)
+
+          # 使用 Gitee API 创建/更新文件
+          # 先尝试获取文件 SHA
+          FILE_SHA=$(curl -s \
+            "https://gitee.com/api/v5/repos/${GITEE_USER}/${GITEE_REPO}/contents/travel-order-collection.json" \
+            -H "Content-Type: application/json" \
+            | jq -r '.sha // empty')
+
+          # 构建 API 请求
+          if [ -n "$FILE_SHA" ]; then
+            # 更新现有文件
+            curl -X PUT \
+              "https://gitee.com/api/v5/repos/${GITEE_USER}/${GITEE_REPO}/contents/travel-order-collection.json" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"access_token\": \"${GITEE_TOKEN}\",
+                \"sha\": \"${FILE_SHA}\",
+                \"content\": \"$(echo -n "$VERSION_CONTENT" | base64 -w 0)\",
+                \"message\": \"Update travel-order-collection to v${{ steps.version.outputs.version }}\"
+              }"
+          else
+            # 创建新文件
+            curl -X POST \
+              "https://gitee.com/api/v5/repos/${GITEE_USER}/${GITEE_REPO}/contents/travel-order-collection.json" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"access_token\": \"${GITEE_TOKEN}\",
+                \"content\": \"$(echo -n "$VERSION_CONTENT" | base64 -w 0)\",
+                \"message\": \"Create travel-order-collection v${{ steps.version.outputs.version }}\"
+              }"
+          fi
+
+          echo "Synced to Gitee: ${GITEE_USER}/${GITEE_REPO}/travel-order-collection.json"

@@ -3,9 +3,11 @@ from service.parser_order import *
 from utils.tools import *
 from utils.omgid import get_omgid
 from utils.simple_output import info, success, verbose, error, separator, section, normal
+from utils.updater import check_update_async, check_update_sync, show_update_notice
 import configparser
 from rich.progress import track
 import sys
+import argparse
 
 def get_result(token,phone,omgid,wsgsig,choose_time,pagenum=0):
     """
@@ -128,9 +130,14 @@ def create_default_config():
 
 
 # TODO 添加登录失败校验，如果登录失败/token过期就重新登录
-# TODO 添加错误处理 
-# TODO 添加自动更新脚本
+# TODO 添加错误处理
 def main(*args, **kwargs):
+    # 1. 显示缓存的更新提示（如果有）
+    show_update_notice()
+
+    # 2. 后台异步检查更新（不阻塞主流程）
+    check_update_async()
+
     if not os.path.exists("config.ini"):
         create_default_config()
 
@@ -232,8 +239,19 @@ def main(*args, **kwargs):
     dict_in_list_to_csv(results, default_file_name=default_file_name)
 
 if __name__ == "__main__":
-    import utils.check_deps as check_deps 
+    import utils.check_deps as check_deps
     if not check_deps.check_requirements(): sys.exit(1) # 检查依赖
+
+    # 解析命令行参数
+    parser = argparse.ArgumentParser(description="滴滴订单导出工具")
+    parser.add_argument("--check-update", action="store_true", help="检查版本更新")
+    args = parser.parse_args()
+
+    # 如果指定了 --check-update，只检查更新并退出
+    if args.check_update:
+        check_update_sync()
+        sys.exit(0)
+
     try:
         main()
     except KeyboardInterrupt as key:
