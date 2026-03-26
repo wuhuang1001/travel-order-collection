@@ -286,12 +286,53 @@ class ParserLoginRes:
     def get_login_res(self, response_text: str) -> Dict[str, Any]:
         """
         解析登录响应数据
-        
+
         Args:
             response_text: 登录响应文本
-            
+
         Returns:
             Dict: 解析后的登录响应数据
         """
         parse = ResponseParser()
         return parse.parse_response(response_text)
+
+
+class OrderFilter:
+    """
+    订单筛选器类
+    用于根据条件筛选订单数据
+    """
+
+    def filter_empty_amount(self, orders: list) -> list:
+        """
+        筛选金额为空的订单
+
+        Args:
+            orders: 订单列表
+
+        Returns:
+            list: 金额为空的订单列表
+        """
+        result = []
+        for order in orders:
+            actual_pay_fee = order.get('actual_pay_fee')
+            if actual_pay_fee is None or actual_pay_fee == '' or actual_pay_fee == 0:
+                result.append(order)
+        return result
+
+    def filter_non_empty_amount(self, orders: list) -> list:
+        """
+        筛选金额不为空的订单
+
+        Args:
+            orders: 订单列表
+
+        Returns:
+            list: 金额不为空的订单列表
+        """
+        result = []
+        for order in orders:
+            actual_pay_fee = order.get('actual_pay_fee')
+            if actual_pay_fee is not None and actual_pay_fee != '' and actual_pay_fee != 0:
+                result.append(order)
+        return result

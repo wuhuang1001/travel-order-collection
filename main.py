@@ -96,7 +96,10 @@ def get_result(token,phone,omgid,wsgsig,choose_time,pagenum=0):
 
         order_detail_res_parsed = parser_history_detail.parse_order_detail(order_detail_res.text)
         result.append(order_detail_res_parsed)
-    
+
+    # 静默过滤空白金额订单
+    result = OrderFilter().filter_non_empty_amount(result)
+
     return result, total_orders
 
 def create_default_config():
