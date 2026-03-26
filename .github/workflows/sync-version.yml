@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get version info
         id: version
@@ -80,29 +80,34 @@ jobs:
           # 构建 API 请求
           if [ -n "$FILE_SHA" ]; then
             # 更新现有文件
-            curl -X PUT \
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X PUT \
               "https://gitee.com/api/v5/repos/${GITEE_USER}/${GITEE_REPO}/contents/travel-order-collection.json" \
               -H "Content-Type: application/json" \
-              -d @- << 'EOF'
-          {
-            "access_token": "$GITEE_TOKEN",
-            "sha": "$FILE_SHA",
-            "content": "$ENCODED_CONTENT",
-            "message": "Update travel-order-collection to v${{ steps.version.outputs.version }}"
-          }
-          EOF
+              -d "{
+                \"access_token\": \"$GITEE_TOKEN\",
+                \"sha\": \"$FILE_SHA\",
+                \"content\": \"$ENCODED_CONTENT\",
+                \"message\": \"Update travel-order-collection to v${{ steps.version.outputs.version }}\"
+              }")
           else
             # 创建新文件
-            curl -X POST \
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
               "https://gitee.com/api/v5/repos/${GITEE_USER}/${GITEE_REPO}/contents/travel-order-collection.json" \
               -H "Content-Type: application/json" \
-              -d @- << 'EOF'
-          {
-            "access_token": "$GITEE_TOKEN",
-            "content": "$ENCODED_CONTENT",
-            "message": "Create travel-order-collection v${{ steps.version.outputs.version }}"
-          }
-          EOF
+              -d "{
+                \"access_token\": \"$GITEE_TOKEN\",
+                \"content\": \"$ENCODED_CONTENT\",
+                \"message\": \"Create travel-order-collection v${{ steps.version.outputs.version }}\"
+              }")
           fi
 
-          echo "Synced to Gitee: ${GITEE_USER}/${GITEE_REPO}/travel-order-collection.json"
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "Synced to Gitee: ${GITEE_USER}/${GITEE_REPO}/travel-order-collection.json"
+          else
+            echo "Failed to sync to Gitee. HTTP $HTTP_CODE"
+            echo "Response: $BODY"
+            exit 1
+          fi
