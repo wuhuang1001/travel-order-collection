@@ -191,10 +191,10 @@ def show_update_notice() -> None:
         # 再次检查版本，可能用户已经更新了
         if compare_versions(local_version, remote_version) < 0:
             info(f"发现新版本: v{remote_version} (当前: v{local_version})")
-            if cache.get("changelog"):
-                info(f"    更新内容: {cache['changelog']}")
-            if cache.get("download_url"):
-                info(f"    下载地址: {cache['download_url']}")
+            # if cache.get("changelog"):
+                # info(f"    更新内容: {cache['changelog']}")
+            # if cache.get("download_url"):
+                # info(f"    下载地址: {cache['download_url']}")
 
 
 def _do_async_check() -> None:
