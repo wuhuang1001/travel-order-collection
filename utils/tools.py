@@ -172,7 +172,7 @@ def dict_in_list_to_csv(
     
     column_mapping = {
         "total_fee": "总费用",
-        "actual_pay_fee": "实付费用", 
+        "actual_pay_fee": "实付费用",
         "license_num": "车牌号码",
         # "from_address": "出发地址",
         "from_name": "出发地",
@@ -180,12 +180,23 @@ def dict_in_list_to_csv(
         "city_name": "所在城市",
         "to_city_name": "目的城市",
         "create_time": "订单创建时间戳",
+        "create_date": "订单日期",
+        "create_time_readable": "订单时间",
         "begin_charge_time": "开始计费时间",
         "finish_time": "行程结束时间",
         "car_type_name": "车型名称"
     }
     # 将字典列表转换为DataFrame
     df = pandas.DataFrame(data)
+
+    # 新增：生成可读日期时间列
+    if "create_time" in df.columns:
+        df["create_date"] = df["create_time"].apply(
+            lambda ts: datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
+        )
+        df["create_time_readable"] = df["create_time"].apply(
+            lambda ts: datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+        )
 
     # 检查是否有缺失的列
     missing_columns = set(column_mapping.keys()) - set(df.columns)
