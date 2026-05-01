@@ -31,6 +31,7 @@ def send_post_request(
     # 构建完整URL
     url = f'{base_url}{path}'
     
+    # TODO 不要使用默认参数，改成必填参数
     # 设置默认headers
     default_headers = {
         'Sec-Ch-Ua': '"Chromium";v="91", " Not;A Brand";v="99"',
