@@ -4,10 +4,13 @@ from utils.tools import *
 from utils.omgid import get_omgid
 from utils.simple_output import info, success, verbose, error, separator, section, normal
 from utils.updater import check_update_async, check_update_sync, show_update_notice
+from service.order_export import export_order_to_csv_silent
 import configparser
 from rich.progress import track
 import sys
 import argparse
+import os
+from typing import cast
 
 def get_result(token,phone,omgid,wsgsig,choose_time,pagenum=0):
     """
@@ -129,9 +132,39 @@ def create_default_config():
         config.write(configfile)
 
 
+def resolve_time(time_arg):
+    """
+    解析 --time 参数，返回 (start_time, end_time, choose_time, is_range, is_time)
+
+    - '202601' → 单月份
+    - '202510-202601' → 时间范围
+    - None → 默认当前月份
+    """
+    from datetime import datetime
+    if time_arg:
+        if '-' in time_arg:
+            parts = time_arg.split('-')
+            return parts[0], parts[1], None, True, False
+        else:
+            return None, None, time_arg, False, True
+    else:
+        return None, None, datetime.now().strftime('%Y%m'), False, True
+
+
 # TODO 添加登录失败校验，如果登录失败/token过期就重新登录
 # TODO 添加错误处理
 def main(*args, **kwargs):
+    # 从 kwargs 中提取导出和调试参数
+    silent_mode = kwargs.get("silent", False)
+    output_dir = kwargs.get("output_dir")
+    output_filename = kwargs.get("output_filename")
+    output_path = kwargs.get("output_path")
+    dry_run = kwargs.get("dry_run", False)
+    show_raw = kwargs.get("show_raw", False)
+    verbose_mode = kwargs.get("verbose", False)
+    yes_mode = kwargs.get("yes_mode", False)
+    time_arg = kwargs.get("time_arg")
+
     # 1. 显示缓存的更新提示（如果有）
     show_update_notice()
 
@@ -145,6 +178,9 @@ def main(*args, **kwargs):
     config.read("config.ini",encoding="utf-8")
     
     is_login = not config.get("login","token") or not config.get("login","phone") or not config.get("login","uid") or not config.get("login","traceid")
+    if yes_mode and is_login:
+        error("未登录，请先登录后再使用 -y 模式")
+        sys.exit(1)
     if is_login:
         section("登录")
         login_res = login.login()
@@ -179,40 +215,57 @@ def main(*args, **kwargs):
     is_time = config.get("range","month")
 
     if is_time or is_range:
-        if is_time:
-            info(f"当前时间范围: {config.get('range', 'month')}")
+        if yes_mode:
+            # -y 模式：跳过询问，静默使用已保存配置
+            pass
         else:
-            info(f"当前时间范围: {config.get('range', 'start')} - {config.get('range', 'end')}")
-        use_config = input("是否使用？(y/n): ").strip().lower() or 'y'
-        if use_config != 'y':
-            is_range = False
-            is_time = False
+            if is_time:
+                info(f"当前时间范围: {config.get('range', 'month')}")
+            else:
+                info(f"当前时间范围: {config.get('range', 'start')} - {config.get('range', 'end')}")
+            use_config = input("是否使用？(y/n): ").strip().lower() or 'y'
+            if use_config != 'y':
+                is_range = False
+                is_time = False
 
     if not is_range and not is_time:
-        while True:
-            time_input = input("请输入时间范围(格式: 202510-202511)或时间(格式: 202511): ").strip()
-            if '-' in time_input:
-                parts = time_input.split('-')
-                if len(parts) == 2 and len(parts[0]) == 6 and len(parts[1]) == 6 and parts[0].isdigit() and parts[1].isdigit():
-                    start_time = parts[0]
-                    end_time = parts[1]
-                    choose_time = None
-                    is_range = True
-                    config["range"]["start"] = start_time
-                    config["range"]["end"] = end_time
+        if yes_mode:
+            start_time, end_time, choose_time, is_range, is_time = resolve_time(time_arg)
+            if is_range:
+                config["range"]["start"] = cast(str, start_time)
+                config["range"]["end"] = cast(str, end_time)
+                with open("config.ini", "w") as configfile:
+                    config.write(configfile)
+            else:
+                config["range"]["month"] = cast(str, choose_time)
+                with open("config.ini", "w") as configfile:
+                    config.write(configfile)
+                info(f"未指定时间范围，默认使用当前月份: {choose_time}")
+        else:
+            while True:
+                time_input = input("请输入时间范围(格式: 202510-202511)或时间(格式: 202511): ").strip()
+                if '-' in time_input:
+                    parts = time_input.split('-')
+                    if len(parts) == 2 and len(parts[0]) == 6 and len(parts[1]) == 6 and parts[0].isdigit() and parts[1].isdigit():
+                        start_time = parts[0]
+                        end_time = parts[1]
+                        choose_time = None
+                        is_range = True
+                        config["range"]["start"] = start_time
+                        config["range"]["end"] = end_time
+                        with open("config.ini", "w") as configfile:
+                            config.write(configfile)
+                        break
+                elif len(time_input) == 6 and time_input.isdigit():
+                    start_time = None
+                    end_time = None
+                    choose_time = time_input
+                    is_time = True
+                    config["range"]["month"] = choose_time
                     with open("config.ini", "w") as configfile:
                         config.write(configfile)
                     break
-            elif len(time_input) == 6 and time_input.isdigit():
-                start_time = None
-                end_time = None
-                choose_time = time_input
-                is_time = True
-                config["range"]["month"] = choose_time
-                with open("config.ini", "w") as configfile:
-                    config.write(configfile)
-                break
-            error("格式错误，请重新输入")
+                error("格式错误，请重新输入")
     
     start_time = config.get("range", "start") if is_range else None
     end_time = config.get("range", "end") if is_range else None
@@ -236,14 +289,64 @@ def main(*args, **kwargs):
         success(f"共获取 {total_count} 条订单")
         default_file_name=f'{choose_time}订单详情.csv'
 
-    dict_in_list_to_csv(results, default_file_name=default_file_name)
+    # 根据参数决定调用哪个导出函数
+    if dry_run:
+        verbose(f"[DRY-RUN] 将导出 {len(results)} 条订单到: {default_file_name}")
+        print("数据预览:")
+        for i, order in enumerate(results[:5]):  # 只显示前5条
+            print(f"  {i+1}. {order.get('from_name', '')} → {order.get('to_name', '')} | {order.get('actual_pay_fee', '')}元")
+        if len(results) > 5:
+            print(f"  ... 还有 {len(results) - 5} 条")
+        return
+
+    # 构建导出路径
+    target_dir = None
+    target_filename = default_file_name
+
+    if output_path:
+        target_dir = os.path.dirname(output_path)
+        target_filename = os.path.basename(output_path)
+    elif output_dir:
+        target_dir = output_dir
+    elif output_filename:
+        target_filename = output_filename
+    elif silent_mode:
+        target_dir = os.getcwd()
+
+    if silent_mode or output_dir or output_filename or output_path:
+        # 使用 silent 导出
+        export_order_to_csv_silent(
+            results,
+            target_dir=target_dir,
+            target_filename=target_filename
+        )
+    else:
+        # 原有弹窗导出
+        dict_in_list_to_csv(results, default_file_name=default_file_name)
 
 if __name__ == "__main__":
     import utils.check_deps as check_deps
     if not check_deps.check_requirements(): sys.exit(1) # 检查依赖
 
     # 解析命令行参数
-    parser = argparse.ArgumentParser(description="订单导出工具")
+    parser = argparse.ArgumentParser(description="滴滴订单导出工具")
+
+    # 导出参数（互斥组）
+    export_group = parser.add_mutually_exclusive_group()
+    export_group.add_argument("--silent", action="store_true", help="静默模式：跳过所有交互，导出到当前目录 （自动启用 -y）")
+    export_group.add_argument("--output-dir", metavar="PATH", help="无弹窗，导出到指定目录")
+    export_group.add_argument("--output-filename", metavar="NAME", help="无弹窗，导出为指定文件名（当前目录）")
+    export_group.add_argument("--output-path", metavar="PATH", help="无弹窗，导出到完整路径")
+
+    # 调试参数
+    parser.add_argument("--dry-run", action="store_true", help="预览数据和文件名，不导出")
+    parser.add_argument("--show-raw", action="store_true", help="显示原始 API 响应")
+    parser.add_argument("--verbose", action="store_true", help="显示详细请求/响应日志")
+
+    # 非交互参数
+    parser.add_argument("-y", "--yes", action="store_true", help="跳过所有交互提示，使用已保存配置")
+    parser.add_argument("--time", metavar="TIME", dest="time_arg", help="指定查询时间（格式: 202601 或 202510-202601）")
+
     parser.add_argument("--check-update", action="store_true", help="检查版本更新")
     args = parser.parse_args()
 
@@ -253,7 +356,17 @@ if __name__ == "__main__":
         sys.exit(0)
 
     try:
-        main()
+        main(
+            silent=args.silent,
+            output_dir=args.output_dir,
+            output_filename=args.output_filename,
+            output_path=args.output_path,
+            dry_run=args.dry_run,
+            show_raw=args.show_raw,
+            verbose_mode=args.verbose,
+            yes_mode=args.yes or args.silent,
+            time_arg=args.time_arg,
+        )
     except KeyboardInterrupt as key:
         print()
         error("用户退出")
