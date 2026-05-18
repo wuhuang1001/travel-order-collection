@@ -306,12 +306,15 @@ def main(*args, **kwargs):
     if output_path:
         target_dir = os.path.dirname(output_path)
         target_filename = os.path.basename(output_path)
-    elif output_dir:
-        target_dir = output_dir
-    elif output_filename:
-        target_filename = output_filename
-    elif silent_mode:
-        target_dir = os.getcwd()
+    else:
+        if output_dir:
+            target_dir = output_dir
+        if output_filename:
+            target_filename = output_filename
+            if not target_filename.endswith('.csv'):
+                target_filename += '.csv'
+        elif silent_mode:
+            target_dir = os.getcwd()
 
     if silent_mode or output_dir or output_filename or output_path:
         # 使用 silent 导出
@@ -331,17 +334,21 @@ if __name__ == "__main__":
     # 解析命令行参数
     parser = argparse.ArgumentParser(description="滴滴订单导出工具")
 
-    # 导出参数（互斥组）
-    export_group = parser.add_mutually_exclusive_group()
-    export_group.add_argument("--silent", action="store_true", help="静默模式：跳过所有交互，导出到当前目录 （自动启用 -y）")
-    export_group.add_argument("--output-dir", metavar="PATH", help="无弹窗，导出到指定目录")
-    export_group.add_argument("--output-filename", metavar="NAME", help="无弹窗，导出为指定文件名（当前目录）")
-    export_group.add_argument("--output-path", metavar="PATH", help="无弹窗，导出到完整路径")
+    # 互斥组（no-popup 选项）
+    silent_path_group = parser.add_mutually_exclusive_group()
+    silent_path_group.add_argument("--silent", action="store_true", help="静默模式：跳过所有交互，导出到当前目录 （自动启用 -y）")
+
+    # 导出参数
+    output_group = parser.add_argument_group(title="输出选项")
+    output_group.add_argument("--output-dir", metavar="PATH", help="无弹窗，导出到指定目录（可与 --output-filename 组合）")
+    output_group.add_argument("--output-filename", metavar="NAME", help="无弹窗，导出为指定文件名（当前目录，可与 --output-dir 组合）")
+    output_group.add_argument("--output-path", metavar="PATH", help="无弹窗，导出到完整路径")
 
     # 调试参数
-    parser.add_argument("--dry-run", action="store_true", help="预览数据和文件名，不导出")
-    parser.add_argument("--show-raw", action="store_true", help="显示原始 API 响应")
-    parser.add_argument("--verbose", action="store_true", help="显示详细请求/响应日志")
+    debug_group = parser.add_argument_group(title="调试选项")
+    debug_group.add_argument("--dry-run", action="store_true", help="预览数据和文件名，不导出")
+    debug_group.add_argument("--show-raw", action="store_true", help="显示原始 API 响应")
+    debug_group.add_argument("--verbose", action="store_true", help="显示详细请求/响应日志")
 
     # 非交互参数
     parser.add_argument("-y", "--yes", action="store_true", help="跳过所有交互提示，使用已保存配置")
