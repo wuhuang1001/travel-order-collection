@@ -5,6 +5,7 @@ from utils.omgid import get_omgid
 from utils.simple_output import info, success, verbose, error, separator, section, normal
 from utils.updater import check_update_async, check_update_sync, show_update_notice
 from service.order_export import export_order_to_csv_silent
+import service.login_service as login_service
 import configparser
 from rich.progress import track
 import sys
@@ -182,6 +183,15 @@ def main(*args, **kwargs):
     if yes_mode and is_login:
         error("未登录，请先登录后再使用 -y 模式")
         sys.exit(1)
+    # 校验已保存的 token 是否仍然有效
+    if not is_login:
+        token = config.get("login", "token")
+        phone = config.get("login", "phone")
+        omgid = get_omgid()
+        wsgsig = get_wsgsig()
+        if not login_service.check_login_status(token, phone, omgid, wsgsig):
+            info("登录状态已失效，需要重新登录")
+            is_login = True
     if is_login:
         section("登录")
         login_res = login.login()
