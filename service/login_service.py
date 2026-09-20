@@ -3,6 +3,7 @@
 import json
 import time
 from utils.tools import send_get_request
+from utils.wsgsig import generate_wsgsig
 
 
 def check_login_status(token: str, phone: str, omgid: str, wsgsig: str) -> bool:
@@ -24,10 +25,7 @@ def check_login_status(token: str, phone: str, omgid: str, wsgsig: str) -> bool:
     """
     timestamp = str(int(time.time() * 1000))
 
-    resp = send_get_request(
-        'https://common.diditaxi.com.cn',
-        '/passenger/history',
-        {
+    params = {
             'access_key_id': '37',
             'appversion': '6.0.19',
             'token': token,
@@ -39,8 +37,15 @@ def check_login_status(token: str, phone: str, omgid: str, wsgsig: str) -> bool:
             'timestamp': timestamp,
             'channel': '1030000000',
             'omgid': omgid,
-            'wsgsig': wsgsig,
-        }
+    }
+
+    # wsgsig 必须由本次请求实际发送的参数生成（忽略调用方传入的 wsgsig）
+    params['wsgsig'] = generate_wsgsig(params)
+
+    resp = send_get_request(
+        'https://common.diditaxi.com.cn',
+        '/passenger/history',
+        params
     )
 
     try:

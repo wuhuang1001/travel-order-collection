@@ -5,7 +5,7 @@ import hashlib
 import random
 import struct
 import time
-from urllib.parse import urlparse, unquote, quote
+from urllib.parse import urlparse, unquote, quote, urlencode
 
 
 # 用 Python 重构 JS 的 wsgsig 生成逻辑，无需 Node.js 环境
@@ -62,7 +62,9 @@ def get_wsgsig(content: str) -> str:
     combined = rand_bytes + xor_result
 
     encoded = custom_base64_encode(combined)
-    return quote("dd03-" + encoded, safe='')
+    # 不要在这里 quote：调用方用 requests 的 params 传参，requests 会再编码一次，
+    # 双重编码会把 %2B/%2F 变成字面量，服务端解码后得到非法 base64 -> HTTP 501
+    return "dd03-" + encoded
 
 
 def get_sig(url):
@@ -106,13 +108,26 @@ def encrypt_to_md5(data):
     return hashlib.md5(data.encode()).hexdigest()
 
 
-def generate_wsgsig()->str:
+def generate_wsgsig(params=None)->str:
     '''
     获取wsgsig
+
+    params: 本次请求真正会发出去的 query 参数（dict 或已序列化的 query string）。
+
+    签名对象必须是「本次请求的参数」，而不是固定 URL：服务端会用收到请求重算
+    map_string 并比对 md5，签名错一个字节就返回 HTTP 501。
+    因此每个请求都要单独调用一次，不能整个会话复用同一个签名。
     '''
+    if params is None:
+        query = ''
+    elif isinstance(params, str):
+        query = params
+    else:
+        query = urlencode(params)
+
     timestamp = str(int(time.time()))
-    url = 'https://dorado.xiaojukeji.com/usce-api/carlib/getAllSeriesByBrand?nginx_cors=false&_t=' + timestamp + '&city_id=1&usce_channel=24448&usce_sub_channel=127395&grade_type_id=7&is_hxz=0&brand_id=1115&cityid=1&cityId=1&city-id=1'
-    sig = get_sig(url)
+    # 复用已有的 get_sig：把本次请求的 query 当作签名对象
+    sig = get_sig('http://x/?' + query)
     content = 'ts=' + timestamp + '&v=1&os=web&av=02&kv=0000010001&vl=' + sig
     wsgsig = get_wsgsig(content)
     return wsgsig

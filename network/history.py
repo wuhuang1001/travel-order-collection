@@ -1,5 +1,6 @@
 import requests
 from utils.tools import send_get_request
+from utils.wsgsig import generate_wsgsig
 import time
 
 class GetHistoryList:
@@ -67,9 +68,11 @@ class GetHistoryList:
             'openid': openid,
             'daijia_token': daijia_token,
             'daijia_pid': daijia_pid,
-            'omgid': omgid,
-            'wsgsig': wsgsig
+            'omgid': omgid
         }
+
+        # wsgsig 必须由本次请求实际发送的参数生成（忽略调用方传入的 wsgsig）
+        params['wsgsig'] = generate_wsgsig(params)
             
         # 发送GET请求
         return send_get_request(base_url, path, params)
@@ -159,9 +162,11 @@ class GetHistoryDetail:
             'Productid': Productid,
             'booking_assign_timeout': booking_assign_timeout,
             'nginx_cors': nginx_cors,
-            'omgid': omgid,
-            'wsgsig': wsgsig
+            'omgid': omgid
         }
+
+        # wsgsig 必须由本次请求实际发送的参数生成（忽略调用方传入的 wsgsig）
+        params['wsgsig'] = generate_wsgsig(params)
             
         # 发送GET请求
         return send_get_request(base_url, path, params)
