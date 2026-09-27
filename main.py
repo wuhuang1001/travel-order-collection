@@ -200,11 +200,16 @@ def main(*args, **kwargs):
             sys.exit(1)
         common_parser = ParserLoginRes()
         login_res_parsed = common_parser.get_login_res(login_res.text)
+        # 兜底校验：登录失败（errno != 0）或缺少 ticket 时友好退出，避免 KeyError
+        if login_res_parsed.get("errno") != 0 or not login_res_parsed.get("ticket"):
+            reason = login_res_parsed.get("error") or login_res_parsed.get("prompt") or "未知错误"
+            error(f"登录失败：{reason}")
+            sys.exit(1)
         config["login"]["token"] = login_res_parsed["ticket"]
-        config["login"]["phone"] = login_res_parsed["cell"]
-        config["login"]["uid"] = str(login_res_parsed["uid"])
-        config["login"]["suid"] = str(login_res_parsed["suid"])
-        config["login"]["traceid"] = login_res_parsed["traceid"]
+        config["login"]["phone"] = login_res_parsed.get("cell", "")
+        config["login"]["uid"] = str(login_res_parsed.get("uid", ""))
+        config["login"]["suid"] = str(login_res_parsed.get("suid", ""))
+        config["login"]["traceid"] = login_res_parsed.get("traceid", "")
 
         with open("config.ini", "w") as configfile:
             config.write(configfile)
